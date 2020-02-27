@@ -51,7 +51,7 @@ let getHHMM timestamp =
 let getSamplingData sessionIdentifier (cloudRecordStr:string) =
     let points =
         (JsonConvert.DeserializeObject<CloudRecord>
-            (Data.dataStr, JsonSerializerSettings(MissingMemberHandling = MissingMemberHandling.Ignore)))
+            (cloudRecordStr, JsonSerializerSettings(MissingMemberHandling = MissingMemberHandling.Ignore)))
     points.records
     |> List.filter (fun x -> x.fields.sessionIdentifier.value = sessionIdentifier)
 
