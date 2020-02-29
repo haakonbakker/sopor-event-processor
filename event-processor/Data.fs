@@ -1,13 +1,6 @@
 module Data
-open FSharp.Data
-open Newtonsoft.Json.Linq
 open Newtonsoft.Json
-open XPlot.GoogleCharts
 open System
-open System.Text.RegularExpressions
-
-
-let data () = ()
 
 type DataInt = {
     value: int
@@ -20,6 +13,8 @@ type DataStr = {
 type DataDouble = {
     value: double
 }
+
+// Bucket Types:
 
 type CKAssetValue = {
   fileChecksum : string
@@ -46,23 +41,85 @@ type CloudRecord = {
     records : Bucket list
 }
 
-let bucketData () = 
-    let bucketsStr = CloudKit.fetchBuckets ()
+// SamplingData Types:
+type SamplingDataFields = {
+    aggregatedEventCount : DataInt
+    sessionIdentifier : DataStr
+    batteryLevel : DataDouble
+}
+
+type Created = {
+    timestamp : string
+    userRecordName : string
+    deviceID : string
+}
+
+type SamplingData = {
+    recordName : string
+    recordType : string
+    fields : SamplingDataFields
+    created: Created
+}
+
+type SamplingDataRecord = {
+    records : SamplingData list
+}
+
+// Session
+type SessionData = {
+    recordName : string
+    recordType : string
+    fields : SamplingDataFields
+    created: Created
+}
+
+type SessionDataRecord = {
+    records : SessionData list
+}
+
+let getDate (timestamp:string) =
+    let timestampInt64 = (timestamp |> int64)
+    let dateTimeOffset = DateTimeOffset.FromUnixTimeMilliseconds(timestampInt64);
+    let dateTime = dateTimeOffset.UtcDateTime;
+    dateTime.ToString("MM/dd/yyyy HH:mm")
+
+let bucketData (bucket:Bucket) = 
+    let bucket = CloudKit.fetchBucket bucket.fields.data.value.downloadURL
+    (JsonConvert.DeserializeObject<Sensors.Event list>
+        (bucket, JsonSerializerSettings(MissingMemberHandling = MissingMemberHandling.Ignore)))
+
+let getBuckets sessionIdentifier = 
+    let bucketsStr = CloudKit.fetch CloudKit.bodyBucket
     let buckets =
         (JsonConvert.DeserializeObject<CloudRecord>
             (bucketsStr, JsonSerializerSettings(MissingMemberHandling = MissingMemberHandling.Ignore)))
-    printfn "%s" (buckets.records.[0].ToString())
-    let bucket = CloudKit.fetchBucket buckets.records.[0].fields.data.value.downloadURL
+    buckets.records
+    |> List.filter (fun x -> x.fields.sessionIdentifier.value = sessionIdentifier)
+    |> List.collect bucketData
 
-    printfn "%s" (Regex.Unescape(bucket))
-    buckets
+let getSamplingData (cloudRecordStr:string) =
+    let points =
+        (JsonConvert.DeserializeObject<SamplingDataRecord>
+            (cloudRecordStr, JsonSerializerSettings(MissingMemberHandling = MissingMemberHandling.Ignore)))
+    points.records
 
+let getSessionData (cloudRecordStr:string) =
+    let points =
+        (JsonConvert.DeserializeObject<SessionDataRecord>
+            (cloudRecordStr, JsonSerializerSettings(MissingMemberHandling = MissingMemberHandling.Ignore)))
+    points.records
 
+let getSamplingDataWithSession sessionIdentifier (cloudRecordStr:string) =
+    let points =
+        (JsonConvert.DeserializeObject<SamplingDataRecord>
+            (cloudRecordStr, JsonSerializerSettings(MissingMemberHandling = MissingMemberHandling.Ignore)))
+    points.records
+    |> List.filter (fun x -> x.fields.sessionIdentifier.value = sessionIdentifier)
 (*
   How to get the bucket data
-  1. Fetch buckets
-  2. Download the CKAsset
-  3. Unescape the random \n chars
-  3. Parse and add to correct datatype
+  1. Fetch buckets DONE
+  2. Download the CKAsset DONE
+  3. DUMP THE BUCKET DB!!! DONE
+  3. Parse and add to correct datatype DONE
   4. Make chart
 *)
