@@ -41,6 +41,11 @@ type CloudRecord = {
     records : Bucket list
 }
 
+type CloudRecordCont = {
+    records : Bucket list
+    continuationMarker: string
+}
+
 // SamplingData Types:
 type SamplingDataFields = {
     aggregatedEventCount : DataInt
