@@ -30,7 +30,7 @@ let chooseSession () =
 
 let fetchAllBuckets sessionIdentifier =
     let buckets = Data.getAllBuckets sessionIdentifier None 0
-    printfn "Number of buckets to fetch: %d" buckets.Length
+    printfn "\nNumber of buckets to fetch: %d" buckets.Length
     buckets
     |> List.filter (fun x -> x.fields.sessionIdentifier.value = sessionIdentifier)
     |> List.mapi (fun i x -> Data.bucketData i x)
