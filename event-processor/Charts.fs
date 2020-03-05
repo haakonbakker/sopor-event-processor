@@ -1,11 +1,16 @@
 module Charts
 open XPlot.GoogleCharts
 open System
-open Newtonsoft.Json
+
+let milliOrSeconds (timestamp:string) =
+    let timestampInt64 = (timestamp |> int64)
+    if timestamp.Length = ("1582991605".Length) then
+        DateTimeOffset.FromUnixTimeSeconds(timestampInt64)
+    else
+        DateTimeOffset.FromUnixTimeMilliseconds(timestampInt64)
 
 let getHHMM timestamp =
-    let timestampInt64 = (timestamp |> int64)
-    let dateTimeOffset = DateTimeOffset.FromUnixTimeMilliseconds(timestampInt64);
+    let dateTimeOffset = milliOrSeconds timestamp
     let dateTime = dateTimeOffset.UtcDateTime;
     dateTime.ToString("HH:mm")
 

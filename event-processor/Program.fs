@@ -14,7 +14,7 @@ let createSession sessionIdentifier time interalID =
      created = time
      interalID = interalID}
 
-let listSessions () = 
+let getSessionList () = 
     let sessionStr = CloudKit.fetch CloudKit.sessionBody
     let sessions = Data.getSessionData sessionStr
     sessions
@@ -27,35 +27,42 @@ let chooseSession () =
     printfn "Getting data from session: %s" internalID
     internalID
 
+
+let fetchAllBuckets sessionIdentifier =
+    let buckets = Data.getAllBuckets sessionIdentifier None 0
+    printfn "Number of buckets to fetch: %d" buckets.Length
+    buckets
+    |> List.filter (fun x -> x.fields.sessionIdentifier.value = sessionIdentifier)
+    |> List.mapi (fun i x -> Data.bucketData i x)
+    |> List.concat
+
 [<EntryPoint>]
 let main argv =
-    printfn "Hello World from F#!"
-    let sessionID = "92AC8172-84D5-4F27-95D9-3D6A1E5C1715" // This session had Batchfrequency 5s, and aggregationInfoFrequency 5 min i.e. (60*5s)
-    let sessionList = listSessions ()
+    printfn "** Sopor Event Proccessing **"
+    printfn "** Loading sessions..."
+    let sessionList = getSessionList ()
     sessionList
-    |> List.map (fun x -> printfn "%d - Started: %s - SessionIdentifier: %s" x.interalID x.created x.sessionIdentifier)
+    |> List.map (fun x -> printfn "%d\t- Started: %s - SessionIdentifier: %s" x.interalID x.created x.sessionIdentifier ; x)
     |> ignore
 
 
     let session = chooseSession ()
 
-    let sessionObj = 
+    let chosenSession = 
         sessionList
         |> List.find (fun x -> x.interalID = (int session))
 
-    printfn "Will get data for: %A" sessionObj
+    printfn "Will get data for: %A" chosenSession
     
-    let samplingData = Data.getSamplingDataWithSession sessionObj.sessionIdentifier (CloudKit.fetch CloudKit.sampleBody)
+    let samplingData = Data.getSamplingDataWithSession chosenSession.sessionIdentifier (CloudKit.fetch (CloudKit.sampleBodyWithSessionID chosenSession.sessionIdentifier))
+    if samplingData.Length = 0 then raise (Exception "Empty Sampling List")
 
-    let chart = Charts.createBatteryChart samplingData
-    chart.Show()
+    let batteryChart = Charts.createBatteryChart samplingData
+    let eventCountChart = Charts.createAggregatedEventCount samplingData
+    let events = fetchAllBuckets chosenSession.sessionIdentifier
+    let heartRateChart = Charts.createEventChart events "Heart Rate"
 
-    let chart = Charts.createAggregatedEventCount samplingData
-    chart.Show()
-
-    let events = Data.getBuckets sessionObj.sessionIdentifier
-    // printfn "%s" (str.ToString())
-    let chart2 = Charts.createEventChart events "Heart Rate"
-    chart2.Show()
-    // printfn "%s" str
+    batteryChart.Show()
+    eventCountChart.Show()
+    heartRateChart.Show()
     0 // return an integer exit code

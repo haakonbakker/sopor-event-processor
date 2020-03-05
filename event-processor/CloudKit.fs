@@ -1,13 +1,10 @@
 module CloudKit
 
-open Newtonsoft.Json.Linq
-open Newtonsoft.Json
 open FSharp.Data
-open System
-open System.Text
 open System.Net
 open System.Security.Cryptography.X509Certificates
 open System.Net.Security
+
 
 let sampleBody = """{
     "query": {
@@ -21,6 +18,29 @@ let sampleBody = """{
     }
 }"""
 
+let sampleBodyWithSessionID sID = 
+    sprintf  """{
+                "query": {
+                    "filterBy": [
+            	        {
+            	            "fieldName": "sessionIdentifier",
+            	            "comparator": "EQUALS",
+            	            "fieldValue": {
+            	                "value": "%s",
+            	                "type": "STRING"
+            	            }
+            	        }
+            	    ],
+                    "recordType": "SamplingData",
+                    "sortBy": [
+                        {
+                            "systemFieldName": "createdTimestamp",
+                            "ascending": true
+                        }
+                    ]
+                }
+            }""" sID
+
 let bodyBucket = """{
     "query": {
         "recordType": "Buckets",
@@ -32,6 +52,53 @@ let bodyBucket = """{
         ]
     }
 }"""
+
+let bodyBucketWithFilter sID =
+    sprintf  """{
+                    "query": {
+                        "filterBy": [
+                	        {
+                	            "fieldName": "sessionIdentifier",
+                	            "comparator": "EQUALS",
+                	            "fieldValue": {
+                	                "value": "%s",
+                	                "type": "STRING"
+                	            }
+                	        }
+                	    ],
+                        "recordType": "Buckets",
+                        "sortBy": [
+                            {
+                                "systemFieldName": "createdTimestamp",
+                                "ascending": true
+                            }
+                        ]
+                    }
+                }""" sID
+
+let fullBodyBucket sID contMarker =
+    sprintf  """{
+                "query": {
+                    "filterBy": [
+            	        {
+            	            "fieldName": "sessionIdentifier",
+            	            "comparator": "EQUALS",
+            	            "fieldValue": {
+            	                "value": "%s",
+            	                "type": "STRING"
+            	            }
+            	        }
+            	    ],
+                    "recordType": "Buckets",
+                    "sortBy": [
+                        {
+                            "systemFieldName": "createdTimestamp",
+                            "ascending": true
+                        }
+                    ]
+                },
+                "continuationMarker": "%s"
+            }""" sID contMarker
 
 let sessionBody = """{
     "query": {
