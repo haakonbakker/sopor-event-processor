@@ -47,3 +47,28 @@ let createEventChart (events: Sensors.Event List) sensorName =
          (Options(title = "Heart Rate"))
     |> Chart.WithLegend true
     |> Chart.WithSize (1000, 500)
+
+let createAccelerometerChart (events: Sensors.Event List) = 
+    let x = events
+            |> List.filter (fun x -> (x.sensorName = "Accelerometer"))
+            |> List.map (fun x -> (getHHMM x.timestamp, x.event.x))
+
+    let y = events
+            |> List.filter (fun x -> (x.sensorName = "Accelerometer"))
+            |> List.map (fun x -> (getHHMM x.timestamp, x.event.y))
+    
+    let z = events
+            |> List.filter (fun x -> (x.sensorName = "Accelerometer"))
+            |> List.map (fun x -> (getHHMM x.timestamp, x.event.z))
+
+    let options =
+        Options
+            ( title = "Accelerometer", curveType = "function",
+              legend = Legend(position = "bottom") )
+
+    [x; y; z]
+    |> Chart.Line
+    |> Chart.WithLabels ["x"; "y"; "z"]
+    |> Chart.WithOptions options
+    |> Chart.WithLegend true
+    |> Chart.WithSize (1000, 500)

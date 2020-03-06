@@ -81,20 +81,23 @@ let getDate (timestamp: string) =
     let dateTime = dateTimeOffset.UtcDateTime
     dateTime.ToString("MM/dd/yyyy HH:mm")
 
-let bucketData (i:int) (bucket: Bucket) =
+let bucketData (i:int) (filterOut:string option) (bucket: Bucket) =
     printf "\rGetting bucket data nr: %d" i
     let bucket = CloudKit.fetchBucket bucket.fields.data.value.downloadURL
-    (JsonConvert.DeserializeObject<Sensors.Event list>
-        (bucket, JsonSerializerSettings(MissingMemberHandling = MissingMemberHandling.Ignore)))
+    let events = (JsonConvert.DeserializeObject<Sensors.Event list>
+                    (bucket, JsonSerializerSettings(MissingMemberHandling = MissingMemberHandling.Ignore)))
+    match filterOut with
+    | Some filter -> events |> List.filter (fun x -> (x.sensorName = filter))
+    | None -> events
 
-let getBuckets sessionIdentifier =
+let getBuckets sessionIdentifier filterOut =
     let bucketsStr = CloudKit.fetch (CloudKit.bodyBucketWithFilter sessionIdentifier)
     let buckets =
         (JsonConvert.DeserializeObject<CloudRecord>
             (bucketsStr, JsonSerializerSettings(MissingMemberHandling = MissingMemberHandling.Ignore)))
     buckets.records
     |> List.filter (fun x -> x.fields.sessionIdentifier.value = sessionIdentifier)
-    |> List.collect (bucketData 0)
+    |> List.collect (bucketData 0 filterOut)
 
 let rec getAllBuckets sessionIdentifier (contMarker: string option) i =
     printf "\rFetching bucket list: %d" i

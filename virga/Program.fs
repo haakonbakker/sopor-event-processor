@@ -28,12 +28,12 @@ let chooseSession () =
     internalID
 
 
-let fetchAllBuckets sessionIdentifier =
+let fetchAllBuckets sessionIdentifier filterOut =
     let buckets = Data.getAllBuckets sessionIdentifier None 0
     printfn "\nNumber of buckets to fetch: %d" buckets.Length
     buckets
     |> List.filter (fun x -> x.fields.sessionIdentifier.value = sessionIdentifier)
-    |> List.mapi (fun i x -> Data.bucketData i x)
+    |> List.mapi (fun i x -> Data.bucketData i filterOut x)
     |> List.concat
 
 [<EntryPoint>]
@@ -45,24 +45,28 @@ let main argv =
     |> List.map (fun x -> printfn "%d\t- Started: %s - SessionIdentifier: %s" x.interalID x.created x.sessionIdentifier ; x)
     |> ignore
 
-
     let session = chooseSession ()
 
     let chosenSession = 
         sessionList
         |> List.find (fun x -> x.interalID = (int session))
 
-    printfn "Will get data for: %A" chosenSession
+    printfn "Getting data for %d which started at %s" chosenSession.interalID chosenSession.created
     
+
+    // Aggregated data
     let samplingData = Data.getSamplingDataWithSession chosenSession.sessionIdentifier (CloudKit.fetch (CloudKit.sampleBodyWithSessionID chosenSession.sessionIdentifier))
     if samplingData.Length = 0 then raise (Exception "Empty Sampling List")
-
     let batteryChart = Charts.createBatteryChart samplingData
     let eventCountChart = Charts.createAggregatedEventCount samplingData
-    let events = fetchAllBuckets chosenSession.sessionIdentifier
-    let heartRateChart = Charts.createEventChart events "Heart Rate"
+
+    // let events = fetchAllBuckets chosenSession.sessionIdentifier (Some "Heart Rate")
+    // if samplingData.Length = 0 then raise (Exception "Empty events list")
+    // let heartRateChart = Charts.createEventChart events "Heart Rate"
+    // let accelerometerChart = Charts.createAccelerometerChart events
 
     batteryChart.Show()
     eventCountChart.Show()
-    heartRateChart.Show()
+    // heartRateChart.Show()
+    // accelerometerChart.Show()
     0 // return an integer exit code
