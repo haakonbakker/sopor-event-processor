@@ -1,24 +1,19 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
-
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
+    <RootNamespace>event_processor</RootNamespace>
     <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp3.1</TargetFramework>
-    <RootNamespace>event_processor</RootNamespace>
   </PropertyGroup>
-
   <ItemGroup>
-    <Compile Include="Sensors.fs" />
+    <Compile Include="SensorDomain.fs" />
     <Compile Include="CloudKit.fs" />
-    <Compile Include="Data.fs" />
+    <Compile Include="CloudKitProcessor.fs" />
     <Compile Include="Charts.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
-
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
     <PackageReference Include="XPlot.GoogleCharts" Version="3.0.1" />
     <PackageReference Include="FSharp.Data" Version="3.3.3" />
-
   </ItemGroup>
-
 </Project>

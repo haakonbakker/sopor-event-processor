@@ -1,6 +1,6 @@
-module Sensors
+module SensorDomain
 
-type AccEvent = {
+type EventData = {
     x: double
     y: double
     z: double
@@ -14,6 +14,6 @@ type Event = {
     sessionIdentifier : string
     timestamp : string
     sensorName : string
-    event: AccEvent
+    event: EventData
 }
 
