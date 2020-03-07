@@ -15,13 +15,18 @@ let getHHMM timestamp =
     dateTime.ToString("HH:mm")
 
 let createBatteryChart (samplingData: Data.SamplingData List) =
+    let axis = Axis(minValue=0, maxValue=100)
+    let options =
+        Options
+            ( title = "Sopor - Sleep Session Battery Life",
+              legend = Legend(position = "bottom"), vAxis=axis )
+
     samplingData
     |> List.map (fun x -> (getHHMM x.created.timestamp, x.fields.batteryLevel.value))
     |> List.toSeq
     |> Chart.Line 
     |> Chart.WithLabel "Battery Level %"
-    |> Chart.WithOptions 
-         (Options(title = "Sopor - Sleep Session Battery Life")) 
+    |> Chart.WithOptions options
     |> Chart.WithLegend true
     |> Chart.WithSize (1000, 500)
 
