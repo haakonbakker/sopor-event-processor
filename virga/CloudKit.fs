@@ -2,6 +2,7 @@ module CloudKit
 
 open FSharp.Data
 open System.Net
+open System
 open System.Security.Cryptography.X509Certificates
 open System.Net.Security
 
@@ -116,7 +117,8 @@ let sessionBody = """{
 let certValidator _ (cert:X509Certificate) (_:X509Chain) (_:SslPolicyErrors) = true
 
 let fetch queryBody =
-    let url = "https://api.apple-cloudkit.com/database/1/iCloud.com.bakkertechnologies.osa-tracker-watch.watchkitapp.watchkitextension/development/public/records/query?ckAPIToken=" + ckAPIToken
+    let token = Environment.GetEnvironmentVariable "CLOUDKIT_TOKEN"
+    let url = "https://api.apple-cloudkit.com/database/1/iCloud.com.bakkertechnologies.osa-tracker-watch.watchkitapp.watchkitextension/development/public/records/query?ckAPIToken=" + token
     ServicePointManager.ServerCertificateValidationCallback <- RemoteCertificateValidationCallback certValidator
     Http.RequestString
         (url, httpMethod = "POST", body = TextRequest queryBody,
